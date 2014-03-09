@@ -1,6 +1,12 @@
-// This is totally inspired 'ripped off'
-// from the raytracer tutorial by Opera Browser
-// and some looks at Qilin Eggs' RetroBomber3d
+/* This is totally inspired 'ripped off'
+ from the raytracer tutorial by Opera Browser
+ and some looks at Qilin Eggs' RetroBomber3d
+	
+ Was playing around with haxepunk.graphics.Canvas;
+ But that was a dead end. BitmapData did not seem to be working.
+ But switched back to it. Only works in HTML5/Flash.. grmbl
+
+*/
 
 import com.haxepunk.Entity;
 import com.haxepunk.utils.Draw;
@@ -37,9 +43,11 @@ class Raycast extends Entity
 		mapWidth = mapDef[0].length;
 		mapHeight = mapDef.length;
 		miniMap = new BitmapData(mapWidth * miniMapScale, 
-			mapHeight * miniMapScale, false, 0x23335);
+			mapHeight * miniMapScale, false, 0xcccccc);
 		Draw.setTarget(miniMap);
 		drawMiniMap();	
+		graphic = new Stamp(miniMap, x0, y0);
+		
 	}
 
 	private function drawMiniMap()
@@ -48,7 +56,7 @@ class Raycast extends Entity
 		for (y in 0...mapHeight) {
 			for (x in 0...mapWidth) {
 				var wall = mapDef[y][x];
-				var color :Int = 0xffffff;
+				var color :Int = 0x000000;
 
 				if (wall != 0) {
 					Draw.rect(x * miniMapScale, y * miniMapScale, 
@@ -58,8 +66,16 @@ class Raycast extends Entity
 		}
 		var x0 = HXP.width - mapWidth * miniMapScale;
 		var y0 = HXP.height - mapHeight* miniMapScale;
-		graphic = new Stamp(miniMap, x0, y0);
-		trace(graphic);
-		
+		var x1 = Math.round(MainScene.player.x * miniMapScale);
+		var y1 = Math.round(MainScene.player.y * miniMapScale);
+		var x2 = Math.round(x1 + Math.cos(MainScene.player.rot) * miniMapScale);
+		var y2 = Math.round(y1 + Math.sin(MainScene.player.rot) * miniMapScale);
+		Draw.line(x1, y1, x2, y2, 0xFFFFFF); 
+		trace(x1, y1, x2, y2);
+	}
+
+	public override function update()
+	{
+		drawMiniMap();
 	}
 }

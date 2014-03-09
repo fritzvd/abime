@@ -6,12 +6,12 @@ import Player;
 
 class MainScene extends Scene
 {
-	private var rayCast:Raycast;
+	public static var rayCast:Raycast;
 	public static var player:Player;
 	public override function begin()
 	{
 		super.begin();
-		player = new Player();
+		player = new Player(3, 4);
 		add(player);
 		rayCast = new Raycast();
 		add(rayCast);

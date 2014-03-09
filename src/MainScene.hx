@@ -6,14 +6,15 @@ import Player;
 
 class MainScene extends Scene
 {
+	private var rayCast:Raycast;
 	public static var player:Player;
 	public override function begin()
 	{
 		super.begin();
 		player = new Player();
 		add(player);
-		var rayTracer:Raycast = new Raycast();
-		add(rayTracer);
+		rayCast = new Raycast();
+		add(rayCast);
 
 		Input.define("left", [Key.LEFT, Key.A]);
 		Input.define("right", [Key.RIGHT, Key.D]);

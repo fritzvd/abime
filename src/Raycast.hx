@@ -38,21 +38,24 @@ class Raycast extends Entity
   [1,0,0,2,0,0,0,0,2,2,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
   [1,0,0,2,0,0,0,0,2,2,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
   [1,0,0,2,0,0,0,0,2,2,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
   [1,0,0,2,0,0,0,0,2,2,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
 		];
 		mapWidth = mapDef[0].length;
 		mapHeight = mapDef.length;
-		miniMap = new BitmapData(mapWidth * miniMapScale, 
-			mapHeight * miniMapScale, false, 0xcccccc);
-		Draw.setTarget(miniMap);
+
 		drawMiniMap();	
-		graphic = new Stamp(miniMap, x0, y0);
-		
+
 	}
 
 	private function drawMiniMap()
 	{
-		// trace(miniMap.rect);
+		miniMap = new BitmapData(mapWidth * miniMapScale, 
+			mapHeight * miniMapScale, false, 0xcccccc);
+		Draw.setTarget(miniMap);
 		for (y in 0...mapHeight) {
 			for (x in 0...mapWidth) {
 				var wall = mapDef[y][x];
@@ -68,10 +71,21 @@ class Raycast extends Entity
 		var y0 = HXP.height - mapHeight* miniMapScale;
 		var x1 = Math.round(MainScene.player.x * miniMapScale);
 		var y1 = Math.round(MainScene.player.y * miniMapScale);
+		Draw.rect(x1, y1, miniMapScale, miniMapScale, 0xF, 1);
 		var x2 = Math.round(x1 + Math.cos(MainScene.player.rot) * miniMapScale);
 		var y2 = Math.round(y1 + Math.sin(MainScene.player.rot) * miniMapScale);
 		Draw.line(x1, y1, x2, y2, 0xFFFFFF); 
-		trace(x1, y1, x2, y2);
+		layer = 1;
+		graphic = new Stamp(miniMap, x0, y0);
+	}
+
+	public function drawRay(xHit:Float, yHit:Float) {
+		var x1 = Math.round(MainScene.player.x * miniMapScale);
+		var y1 = Math.round(MainScene.player.y * miniMapScale);
+		var x2 = Math.round(xHit * miniMapScale);
+		var y2 = Math.round(yHit * miniMapScale);
+		Draw.line(x1, y1, x2, y2, 0x888888); 
+		super.render();
 	}
 
 	public override function update()

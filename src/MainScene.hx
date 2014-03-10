@@ -15,7 +15,6 @@ class MainScene extends Scene
 		add(player);
 		rayCast = new Raycast();
 		add(rayCast);
-
 		Input.define("left", [Key.LEFT, Key.A]);
 		Input.define("right", [Key.RIGHT, Key.D]);
 		Input.define("up", [Key.UP, Key.W]);

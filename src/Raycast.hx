@@ -30,9 +30,11 @@ class Raycast extends Entity
 	private var twoPI:Float;
 	private var walls:Spritemap;
 
+	private var strips:Array<Entity>;
+
 	public function new()
 	{
-		super(x, y);
+		super();
 		miniMapScale = 4;
 		mapDef = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
@@ -51,6 +53,23 @@ class Raycast extends Entity
 		fov = 60 * Math.PI / 180;
 		viewDist = (HXP.width/2) / Math.tan((fov / 2));
 		twoPI = Math.PI * 2;
+	}
+
+	public override function added()
+	{
+		initSpriteMap();		
+	}
+
+	private function initSpriteMap()
+	{
+		strips = new Array<Entity>();
+		for (i in 0...numRays) {
+			walls.scaledWidth = stripWidth;
+			var strip = new Entity(i * 2, 0, walls);
+			strips.push(strip);
+			// trace(scene);
+			scene.add(strip);
+		}
 	}
 
 	private function drawMiniMap()
@@ -127,7 +146,7 @@ class Raycast extends Entity
 		var rayX = MainScene.player.x;
 		var rayY = MainScene.player.y;
 
-		while (rayX >= 0 && rayX < HXP.width && rayY >= 0 && rayY < HXP.height) {
+		while (rayX >= 0 && rayX < mapWidth && rayY >= 0 && rayY < mapHeight) {
 			var wallX = Math.floor(rayX + (right ? 0 : -1));
 			var wallY = Math.floor(rayY);
 
@@ -154,7 +173,7 @@ class Raycast extends Entity
 		rayY  = up ? Math.floor(MainScene.player.y) : Math.ceil(MainScene.player.y);
 		rayX = MainScene.player.x + (rayY - MainScene.player.y) * slope;
 
-		while (rayX >= 0 && rayX < HXP.width && rayY >= 0 && rayY < HXP.height) {
+		while (rayX >= 0 && rayX < mapWidth && rayY >= 0 && rayY < mapHeight) {
 			var wallY = Math.floor(rayY + (up ? -1 : 0));
 			var wallX = Math.floor(x);
 
@@ -174,15 +193,22 @@ class Raycast extends Entity
 			rayX += dX;
 			rayY += dY;
 		}
-		// if (dist != 0) {
+		// trace(dist);
+		if (dist != 0) {
 			// walls.getTile(stripIdx, 0);
 			dist = Math.sqrt(dist);
 			dist = dist * Math.cos(0 - rayAngle);
 
-			addGraphic(walls);
-			trace(x,y);
-			walls.getFrame(1);
-		// }
+			var textHeight = Math.round(viewDist / dist);
+			var textWidth = textHeight * stripWidth;
+			var top = Math.round(HXP.height - textHeight / 2);
+			walls.height = Math.floor(textHeight * 4);
+			walls.width = Math.floor(textWidth * 2);
+			var texX = Math.round(textureX * textWidth);
+
+			// addGraphic(walls);
+			// walls.getFrame(1);
+		}
 
 	}
 

@@ -17,7 +17,7 @@ class Player extends Entity
 		moveSpeed = 0.18; // arbitrary.. 
 		dir = 0;
 		// rot = 0;
-		graphic = Image.createRect(30,30, 0x0);
+		// graphic = Image.createRect(30,30, 0x0);
 	}
 
 	private function calculateMovement()

@@ -12,6 +12,7 @@ import com.haxepunk.Entity;
 import com.haxepunk.utils.Draw;
 import com.haxepunk.HXP;
 import flash.display.BitmapData;
+import com.haxepunk.graphics.Spritemap;
 import com.haxepunk.graphics.Stamp;
 
 
@@ -27,7 +28,7 @@ class Raycast extends Entity
 	private var viewDist:Float;
 	private var stripWidth:Int;
 	private var twoPI:Float;
-
+	private var walls:Spritemap;
 
 	public function new()
 	{
@@ -42,6 +43,8 @@ class Raycast extends Entity
 		mapWidth = mapDef[0].length;
 		mapHeight = mapDef.length;
 
+
+		walls = new Spritemap('graphics/walls.png', 128, 128);
 		drawMiniMap();
 		stripWidth = 4;
 		numRays = Math.ceil(HXP.width / stripWidth);
@@ -171,11 +174,21 @@ class Raycast extends Entity
 			rayX += dX;
 			rayY += dY;
 		}
+		// if (dist != 0) {
+			// walls.getTile(stripIdx, 0);
+			dist = Math.sqrt(dist);
+			dist = dist * Math.cos(0 - rayAngle);
+
+			addGraphic(walls);
+			trace(x,y);
+			walls.getFrame(1);
+		// }
 
 	}
 
 	public override function update()
 	{
 		drawMiniMap();
+		castRays();
 	}
 }

@@ -13,22 +13,21 @@ class Player extends Entity
 	{
 		super(x, y);
 		rotSpeed = 6 * Math.PI / 180;
-		speed = 0;
+		speed = 1;
 		moveSpeed = 0.18; // arbitrary.. 
 		dir = 0;
-		rot = 0;
+		// rot = 0;
 		graphic = Image.createRect(30,30, 0x0);
 	}
 
 	private function calculateMovement()
 	{
 		var moveStep = speed * moveSpeed;
-		rot += dir * rotSpeed;
-		var newX = x + Math.cos(rot) * moveStep;	// calculate new player position with simple trigonometry
-		var newY = y + Math.sin(rot) * moveStep;
+		// rot += dir * rotSpeed;
+		var newX = x + moveStep;	// calculate new player position with simple trigonometry
+		var newY = y;
 		var tile = MainScene.rayCast.mapDef[Math.round(newY)][Math.round(newX)];
 		var collides = true ? (tile != 0) : false;
-		trace(collides);
 		if (!collides) {
 			x = newX;
 			y = newY;
@@ -41,7 +40,6 @@ class Player extends Entity
 	{
 		super.update();
 		calculateMovement();
-		speed = 0;
-		dir = 0;
+		// dir = 0;
 	}
 }

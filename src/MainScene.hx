@@ -11,7 +11,7 @@ class MainScene extends Scene
 	public override function begin()
 	{
 		super.begin();
-		player = new Player(3, 4);
+		player = new Player(1, 1);
 		add(player);
 		rayCast = new Raycast();
 		add(rayCast);

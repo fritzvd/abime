@@ -14,6 +14,8 @@ import com.haxepunk.HXP;
 import flash.display.BitmapData;
 import com.haxepunk.graphics.Spritemap;
 import com.haxepunk.graphics.Stamp;
+import com.haxepunk.graphics.Image;
+import flash.geom.Rectangle;
 
 
 class Raycast extends Entity 
@@ -30,6 +32,7 @@ class Raycast extends Entity
 	private var twoPI:Float;
 	private var walls:Spritemap;
 
+	public var objectsMap(default, null):Array<Array<Entity>>;
 	private var strips:Array<Entity>;
 
 	public function new()
@@ -40,6 +43,7 @@ class Raycast extends Entity
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
 		];
 		mapWidth = mapDef[0].length;
@@ -48,10 +52,10 @@ class Raycast extends Entity
 
 		walls = new Spritemap('graphics/walls.png', 128, 128);
 		drawMiniMap();
-		stripWidth = 4;
+		stripWidth = 2;
 		numRays = Math.ceil(HXP.width / stripWidth);
-		fov = 60 * Math.PI / 180;
-		viewDist = (HXP.width/2) / Math.tan((fov / 2));
+		fov = 120 * HXP.RAD;
+		viewDist = 255;
 		twoPI = Math.PI * 2;
 	}
 
@@ -63,13 +67,20 @@ class Raycast extends Entity
 	private function initSpriteMap()
 	{
 		strips = new Array<Entity>();
-		for (i in 0...numRays) {
-			walls.scaledWidth = stripWidth;
-			var strip = new Entity(i * 2, 0, walls);
+		for (i in 0 ...numRays) {
+			var img:Image = new Image(MainScene.texturesCache, new Rectangle(0, 0, 2, 64));
+			img.scaledWidth = stripWidth;
+			var strip = new Entity(i * 2, 0, img);
 			strips.push(strip);
-			// trace(scene);
-			scene.add(strip);
+			scene.add(strip); 
 		}
+
+				// objects map
+		objectsMap = new Array<Array<Entity>>();
+		objectsMap = [];
+		for (y in 0 ... mapDef.length)
+			objectsMap[y] = [];
+		
 	}
 
 	private function drawMiniMap()
@@ -93,21 +104,9 @@ class Raycast extends Entity
 		var x1 = Math.round(MainScene.player.x * miniMapScale);
 		var y1 = Math.round(MainScene.player.y * miniMapScale);
 		Draw.rect(x1, y1, miniMapScale, miniMapScale, 0xF, 1);
-		// var x2 = Math.round(x1 + Math.cos(MainScene.player.rot) * miniMapScale);
-		// var y2 = Math.round(y1 + Math.sin(MainScene.player.rot) * miniMapScale);
-		// Draw.line(x1, y1, x2, y2, 0xFFFFFF); 
 		layer = 1;
 		graphic = new Stamp(miniMap, x0, y0);
 	}
-
-	// public function drawRay(xHit:Float, yHit:Float) {
-	// 	var x1 = Math.round(MainScene.player.x * miniMapScale);
-	// 	var y1 = Math.round(MainScene.player.y * miniMapScale);
-	// 	var x2 = Math.round(xHit * miniMapScale);
-	// 	var y2 = Math.round(yHit * miniMapScale);
-	// 	Draw.line(x1, y1, x2, y2, 0x888888); 
-	// 	super.render();
-	// }
 
 	private function castRays()
 	{
@@ -117,7 +116,7 @@ class Raycast extends Entity
 			var rayViewDist = Math.sqrt(rayScreenPos * rayScreenPos + viewDist * viewDist);
 			var rayAngle:Float = Math.asin(rayScreenPos / rayViewDist);
 
-			castSingleRay(10, stripIdx++);
+			castSingleRay(MainScene.player.rot + rayAngle, stripIdx++);
 		}
 	}
 
@@ -131,35 +130,44 @@ class Raycast extends Entity
 
 		var angleSin = Math.sin(rayAngle);
 		var angleCos = Math.cos(rayAngle);
+		var wallType = 0;
 
-		var dist:Float = 0,
+		var dist:Float = HXP.NUMBER_MAX_VALUE,
 			xHit:Float = 0,
 			yHit:Float = 0,
-			textureX,
-			wallX,
-			wallY;
+			textureX:Float = 0,
+			wallX=0,
+			wallY=0,
+			wallType = 0;
 
 		var slope:Float = angleSin / angleCos;
 		var dX:Float = right ? 1 : -1;
 		var dY:Float = dX * slope;
+		var wallIsHorizontal = false;
 
-		var rayX = MainScene.player.x;
-		var rayY = MainScene.player.y;
+		// var rayX = MainScene.player.x;
+		// var rayY = MainScene.player.y;
+		var rayX:Float = right ? Math.ceil(MainScene.player.x) : Math.floor(MainScene.player.x);  // starting horizontal position, at one of the edges of the current map block
+		var rayY:Float = MainScene.player.y + (x - MainScene.player.x) * slope;  // starting vertical position. We add the small horizontal step we just made, multiplied by the slope.
+
 
 		while (rayX >= 0 && rayX < mapWidth && rayY >= 0 && rayY < mapHeight) {
 			var wallX = Math.floor(rayX + (right ? 0 : -1));
 			var wallY = Math.floor(rayY);
-
+			
+			// trace(mapDef[wallY][wallX]);
 			if (mapDef[wallY][wallX] > 0) {
 				var distX = rayX - MainScene.player.x;
 				var distY = rayY - MainScene.player.y;
 				dist = distX * distX + distY * distY;
 
+				wallType = mapDef[wallY][wallX];
 				textureX = rayY % 1;
 				if (!right) textureX = 1 - textureX;
 				xHit = rayX;
 				yHit = rayY;
 
+				wallIsHorizontal = true;
 				break;
 			}
 
@@ -168,14 +176,19 @@ class Raycast extends Entity
 		}
 
 		slope = angleCos / angleSin;
+		// trace('BEfORE ######',dY, dX);
 		dY = up ? -1 : 1;
 		dX = dY * slope;
-		rayY  = up ? Math.floor(MainScene.player.y) : Math.ceil(MainScene.player.y);
-		rayX = MainScene.player.x + (rayY - MainScene.player.y) * slope;
+		// trace('aFter	 ######', dY, dX);
+		rayY = up ? Math.floor(MainScene.player.y) : Math.ceil(MainScene.player.y);
+		rayX = MainScene.player.x + (rayY - MainScene.player.x) * slope;
 
 		while (rayX >= 0 && rayX < mapWidth && rayY >= 0 && rayY < mapHeight) {
 			var wallY = Math.floor(rayY + (up ? -1 : 0));
-			var wallX = Math.floor(x);
+			var wallX = Math.floor(rayX);
+
+
+			if (wallY < 0) wallY = 0;
 
 			if (mapDef[wallY][wallX] > 0) {
 				var distX = rayX - MainScene.player.x;
@@ -185,6 +198,8 @@ class Raycast extends Entity
 					dist = blockDist;
 					xHit = rayX;
 					yHit = rayY;
+
+					wallType = mapDef[wallY][wallX];
 					textureX = rayX % 1;
 					if (up) textureX = 1 - textureX;
 				}
@@ -195,26 +210,54 @@ class Raycast extends Entity
 		}
 		// trace(dist);
 		if (dist != 0) {
-			// walls.getTile(stripIdx, 0);
 			dist = Math.sqrt(dist);
-			dist = dist * Math.cos(0 - rayAngle);
+			// walls.getTile(stripIdx, 0);
+			// use perpendicular distance to adjust for fish eye
+			// distorted_dist = correct_dist / cos(relative_angle_of_ray)
+			dist = dist * Math.cos(MainScene.player.rot - rayAngle);
 
-			var textHeight = Math.round(viewDist / dist);
-			var textWidth = textHeight * stripWidth;
-			var top = Math.round(HXP.height - textHeight / 2);
-			walls.height = Math.floor(textHeight * 4);
-			walls.width = Math.floor(textWidth * 2);
-			var texX = Math.round(textureX * textWidth);
+			// now calc the position, height and width of the wall strip
 
-			// addGraphic(walls);
-			// walls.getFrame(1);
+			// "real" wall height in the game world is 1 unit, the distance from the player to the screen is viewDist,
+			// thus the height on the screen is equal to wall_height_real * viewDist / dist
+
+			var height:Float = viewDist / dist;
+			// top placement is easy since everything is centered on the x-axis, so we simply move
+			// it half way down the screen and then half the wall height back up.
+			var top = Math.round((HXP.height - height)) >> 1; // /2
+			
+			var texX = Math.floor(textureX * 64);
+			if (texX > 64 - stripWidth)	// make sure we don't move the texture too far to avoid gaps.
+				texX = Math.floor(64 - stripWidth);
+			if (dist > 5 )
+				texX += 64;
+				
+			var texY = (wallType-1) << 6; // *64
+			
+			var dwx = xHit - MainScene.player.x;
+			var dwy = yHit - MainScene.player.y;
+			var wallDist = dwx*dwx + dwy*dwy;
+			
+			var img:Image = cast(strips[stripIdx].graphic, Image);
+			img.clipRect.left = texX; // new Rectangle(texX, texY, 2, 64);
+			img.clipRect.top = texY; 
+			img.clipRect.width = 2; 
+			img.clipRect.height = 64; 
+			img.updateBuffer();
+			
+			img.scaledHeight = height;
+			img.y = top;
+			strips[stripIdx].layer = Math.floor(wallDist) + 10;
 		}
 
 	}
 
+	
+
 	public override function update()
 	{
-		drawMiniMap();
 		castRays();
+		drawMiniMap();
+		super.update();
 	}
 }
